@@ -3,7 +3,8 @@ package com.example.laba_33.dto;
 public class ConvertRequest {
 
     private double amount;
-    private double rate;
+    private String fromCurrency;
+    private String toCurrency;
 
     public double getAmount() {
         return amount;
@@ -13,11 +14,19 @@ public class ConvertRequest {
         this.amount = amount;
     }
 
-    public double getRate() {
-        return rate;
+    public String getFromCurrency() {
+        return fromCurrency;
     }
 
-    public void setRate(double rate) {
-        this.rate = rate;
+    public void setFromCurrency(String fromCurrency) {
+        this.fromCurrency = fromCurrency;
+    }
+
+    public String getToCurrency() {
+        return toCurrency;
+    }
+
+    public void setToCurrency(String toCurrency) {
+        this.toCurrency = toCurrency;
     }
 }

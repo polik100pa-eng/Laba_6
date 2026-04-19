@@ -23,11 +23,17 @@ public class CurrencyController {
         if (request.getAmount() <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
-        if (request.getRate() <= 0) {
-            throw new IllegalArgumentException("Rate must be greater than zero");
+
+        if (request.getFromCurrency().equalsIgnoreCase(request.getToCurrency())) {
+            throw new IllegalArgumentException("Cannot convert currency to itself");
         }
-        double result = request.getAmount() * request.getRate();
+
+        double fromRate = exchangeRateService.getRate(request.getFromCurrency());
+        double toRate = exchangeRateService.getRate(request.getToCurrency());
+
+        double result = request.getAmount() * fromRate / toRate;
         result = Math.round(result * 100.0) / 100.0;
+
         return ResponseEntity.ok(new ConvertResponse(result));
     }
 }
