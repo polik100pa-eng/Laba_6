@@ -134,23 +134,22 @@ jobs:
           name: allure-report
           path: allure-report
 
-    notify:
-      runs-on: ubuntu-latest
-      needs: [ allure-report ]
-      if: always()
+  notify:
+    runs-on: ubuntu-latest
+    needs: [ allure-report ]
+    if: always()
 
-      steps:
-        - name: Telegram notification
-          uses: appleboy/telegram-action@v0.1.0
-          with:
-            token: ${{ secrets.TG_TOKEN }}
-            to: ${{ secrets.TG_CHAT_ID }}
-            message: |
-              📊 CI Pipeline finished
-              Status: ${{ needs.allure-report.result }}
-              Repo: ${{ github.repository }}
-              Branch: ${{ github.ref_name }}       
-
+    steps:
+      - name: Telegram notification
+        uses: appleboy/telegram-action@v0.1.0
+        with:
+          token: ${{ secrets.TG_TOKEN }}
+          to: ${{ secrets.TG_CHAT_ID }}
+          message: |
+            📊 CI Pipeline finished
+            Status: ${{ needs.allure-report.result }}
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}  
 
 
   deploy-report:
