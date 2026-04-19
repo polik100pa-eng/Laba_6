@@ -33,11 +33,13 @@ export default defineConfig({
     },
   ],
 
-  // 🔥 ВАЖНО: только один способ запуска сервера
   webServer: {
     command: 'npm start',
     url: 'http://localhost:3000',
-    reuseExistingServer: false, // важно для CI
+
+    // 🔥 важно: чтобы CI сам запускал сервер
+    reuseExistingServer: false,
+
     timeout: 120000,
   },
 });

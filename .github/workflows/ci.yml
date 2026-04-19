@@ -107,14 +107,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: all-results/
+          path: artifacts/
 
-      - name: Merge Allure results
+      # 🔥 ВАЖНО: берём ВСЕ allure-results из вложенных папок
+      - name: Collect Allure results
         run: |
           mkdir -p allure-results
-          find all-results -type f -name "*.json" -exec cp {} allure-results/ \;
+          find artifacts -type f -name "*-result.json" -exec cp {} allure-results/ \;
+          find artifacts -type f -name "*.json" -exec cp {} allure-results/ \;
+
+      - name: Show collected results (debug)
+        run: ls -R allure-results
 
       - name: Install Allure CLI
         run: npm install -g allure-commandline
@@ -122,12 +128,11 @@ jobs:
       - name: Generate Allure report
         run: allure generate allure-results -o allure-report
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload report
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
-
-
 
 
   deploy-report:
@@ -135,20 +140,17 @@ jobs:
     needs: allure-report
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Allure report
+      - name: Download report
         uses: actions/download-artifact@v4
         with:
           name: allure-report
-          path: allure-report   # 👈 ВАЖНО: сюда
+          path: report/
 
-      - name: Debug structure
-        run: |
-          ls -R allure-report
+      - name: Debug
+        run: ls -R report/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: allure-report
+          publish_dir: report
