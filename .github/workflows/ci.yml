@@ -121,6 +121,7 @@ jobs:
 
 
 
+
   deploy-report:
     runs-on: ubuntu-latest
     needs: allure-report
@@ -135,8 +136,14 @@ jobs:
           name: allure-report
           path: report/
 
+      - name: Fix Allure structure
+        run: |
+          ls -R allure-report   
+
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-report
+
