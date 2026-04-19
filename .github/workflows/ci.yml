@@ -11,43 +11,31 @@ env:
 
 jobs:
 
-  # =========================
-  # UNIT TESTS
-  # =========================
   unit-tests:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [20.x, 22.x]
-        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npm run test:unit
 
-      - name: Run unit tests
-        run: npm run test:unit
-
-      - name: Upload unit artifacts
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: unit-results-${{ matrix.os }}-${{ matrix.node-version }}
+          name: unit-results
           path: allure-results/
 
 
-  # =========================
-  # API TESTS (FIXED)
-  # =========================
   api-tests:
     runs-on: ubuntu-latest
 
@@ -58,35 +46,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      # 🔥 FIX: сервер обязателен
       - name: Start server
         run: |
           npm start &
           npx wait-on http://localhost:3000
 
-      - name: Run API tests
-        run: npm run test:api
+      - run: npm run test:api
 
-      - name: Upload API artifacts
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: api-results-${{ matrix.node-version }}
+          name: api-results
           path: allure-results/
 
 
-  # =========================
-  # UI TESTS (FIXED - NO CONFLICT)
-  # =========================
   ui-tests:
     runs-on: ubuntu-latest
 
@@ -97,34 +77,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npx playwright install --with-deps
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      - name: Start server
+        run: |
+          npm start &
+          npx wait-on http://localhost:3000
 
-      # ❌ НЕТ npm start (Playwright сам поднимает сервер)
+      - run: npm run test:ui
 
-      - name: Run UI tests
-        run: npm run test:ui
-
-      - name: Upload UI artifacts
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: ui-results-${{ matrix.node-version }}
+          name: ui-results
           path: playwright-report/
 
 
-  # =========================
-  # ALLURE REPORT (FIXED MERGE)
-  # =========================
   allure-report:
     runs-on: ubuntu-latest
     needs: [unit-tests, api-tests, ui-tests]
@@ -132,27 +106,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - run: npm ci
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           path: all-results/
 
-      # 🔥 FIX: нормальный merge
-      - name: Merge Allure results
-        run: |
-          mkdir -p merged-allure-results
-          find all-results -type f -name "*.json" -exec cp {} merged-allure-results/ \;
-          find all-results -type f -name "*.txt" -exec cp {} merged-allure-results/ \;
+      - run: npx allure generate all-results --clean -o allure-report
 
-      - name: Generate Allure report
-        run: npx allure generate merged-allure-results --clean -o allure-report
-
-      - name: Upload Allure report
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report

@@ -11,7 +11,7 @@ class CurrencyPage {
     }
 
     async open() {
-        await this.page.goto('http://localhost:3000');
+        await this.page.goto('/');
         await this.page.waitForSelector('#fromCurrency');
     }
 
