@@ -126,7 +126,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: allure-report
 
-
     steps:
       - uses: actions/checkout@v4
 
@@ -134,16 +133,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-report
-          path: report/
+          path: allure-report   # 👈 ВАЖНО: сюда
 
-      - name: Fix Allure structure
+      - name: Debug structure
         run: |
-          ls -R allure-report   
-
+          ls -R allure-report
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-report
-
