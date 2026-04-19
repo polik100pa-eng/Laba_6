@@ -11,6 +11,9 @@ env:
 
 jobs:
 
+  # =========================
+  # UNIT TESTS
+  # =========================
   unit-tests:
     runs-on: ${{ matrix.os }}
 
@@ -42,6 +45,9 @@ jobs:
           path: allure-results/
 
 
+  # =========================
+  # API TESTS (FIXED)
+  # =========================
   api-tests:
     runs-on: ubuntu-latest
 
@@ -61,10 +67,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-#      - name: Start server
-#        run: |
-#          npm start &
-#          npx wait-on http://localhost:3000
+      # 🔥 FIX: сервер обязателен
+      - name: Start server
+        run: |
+          npm start &
+          npx wait-on http://localhost:3000
 
       - name: Run API tests
         run: npm run test:api
@@ -77,6 +84,9 @@ jobs:
           path: allure-results/
 
 
+  # =========================
+  # UI TESTS (FIXED - NO CONFLICT)
+  # =========================
   ui-tests:
     runs-on: ubuntu-latest
 
@@ -99,10 +109,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Start server
-        run: |
-          npm start &
-          npx wait-on http://localhost:3000
+      # ❌ НЕТ npm start (Playwright сам поднимает сервер)
 
       - name: Run UI tests
         run: npm run test:ui
@@ -115,6 +122,9 @@ jobs:
           path: playwright-report/
 
 
+  # =========================
+  # ALLURE REPORT (FIXED MERGE)
+  # =========================
   allure-report:
     runs-on: ubuntu-latest
     needs: [unit-tests, api-tests, ui-tests]
@@ -131,8 +141,15 @@ jobs:
         with:
           path: all-results/
 
+      # 🔥 FIX: нормальный merge
+      - name: Merge Allure results
+        run: |
+          mkdir -p merged-allure-results
+          find all-results -type f -name "*.json" -exec cp {} merged-allure-results/ \;
+          find all-results -type f -name "*.txt" -exec cp {} merged-allure-results/ \;
+
       - name: Generate Allure report
-        run: npx allure generate all-results --clean -o allure-report
+        run: npx allure generate merged-allure-results --clean -o allure-report
 
       - name: Upload Allure report
         uses: actions/upload-artifact@v4
